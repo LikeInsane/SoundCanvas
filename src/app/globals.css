@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@layer base {
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background: rgba(67, 56, 202, 0.3);
+    color: #fff;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-brand-card/60 backdrop-blur-xl border border-brand-border/50 rounded-2xl;
+  }
+
+  .glass-nav {
+    @apply bg-brand-dark/80 backdrop-blur-xl border-b border-white/[0.06];
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-7 py-3 rounded-full
+           bg-brand-cta text-white font-medium text-sm
+           transition-all duration-200 ease-out cursor-pointer
+           hover:bg-brand-cta-hover hover:scale-[1.02]
+           active:scale-[0.98]
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-cta/50 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-dark;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-7 py-3 rounded-full
+           bg-transparent text-brand-cta font-medium text-sm
+           border border-brand-cta/30
+           transition-all duration-200 ease-out cursor-pointer
+           hover:bg-brand-cta/10 hover:border-brand-cta/50
+           active:scale-[0.98]
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-cta/50 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-dark;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl
+           bg-brand-card border border-brand-border
+           text-brand-text placeholder-brand-muted
+           text-sm transition-all duration-200
+           focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/30;
+  }
+
+  .section-fade {
+    @apply opacity-0 animate-fade-in;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-fade,
+  .animate-fade-in,
+  .animate-slide-up {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
