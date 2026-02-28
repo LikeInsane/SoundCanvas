@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
+import { validateProjectContent } from "@/lib/validate-content";
 
 /**
  * 鉴权：仅本人可操作
@@ -89,10 +90,15 @@ export async function PUT(
     if (typeof body.content !== "string") {
       return NextResponse.json({ error: "content 必须为字符串" }, { status: 400 });
     }
+    let parsed: unknown;
     try {
-      JSON.parse(body.content);
+      parsed = JSON.parse(body.content);
     } catch {
       return NextResponse.json({ error: "content 必须是合法 JSON 字符串" }, { status: 400 });
+    }
+    const validationError = validateProjectContent(parsed);
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 });
     }
     updates.content = body.content;
   }

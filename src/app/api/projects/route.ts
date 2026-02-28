@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
+import { validateProjectContent } from "@/lib/validate-content";
 
 /**
  * GET /api/projects - 获取当前用户的作品列表（不含 content）
@@ -60,6 +61,11 @@ export async function POST(req: Request) {
 
   if (!parsed || typeof parsed !== "object") {
     return NextResponse.json({ error: "content 解析后必须是对象" }, { status: 400 });
+  }
+
+  const validationError = validateProjectContent(parsed);
+  if (validationError) {
+    return NextResponse.json({ error: validationError }, { status: 400 });
   }
 
   const project = await prisma.project.create({
