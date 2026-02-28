@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { getServerSession } from "next-auth";
 import { Music, Headphones, Piano, Mic2 } from "lucide-react";
+import { authOptions } from "@/lib/auth";
 
 const features = [
   {
@@ -19,7 +21,9 @@ const features = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const session = await getServerSession(authOptions);
+
   return (
     <main className="min-h-screen">
       {/* Hero */}
@@ -45,12 +49,21 @@ export default function HomePage() {
           </p>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+            <Link href="/learn" className="btn-secondary">
+              去学习
+            </Link>
             <Link href="/sandbox" className="btn-primary">
-              开始编曲
+              去编曲
             </Link>
-            <Link href="/learn/rhythm" className="btn-secondary">
-              了解更多
-            </Link>
+            {session ? (
+              <Link href="/projects" className="btn-secondary">
+                我的作品
+              </Link>
+            ) : (
+              <Link href="/login" className="btn-secondary">
+                登录
+              </Link>
+            )}
           </div>
         </div>
       </section>
