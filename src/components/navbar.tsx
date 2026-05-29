@@ -17,12 +17,30 @@ export function Navbar() {
           </span>
         </Link>
 
-        <nav className="flex items-center gap-6 text-xs font-medium">
+        <nav className="flex items-center gap-5 text-xs font-medium">
           <Link
-            href="/learn/rhythm"
+            href="/learn"
             className="text-brand-muted hover:text-brand-text transition-colors duration-200 cursor-pointer"
           >
-            学习
+            课程
+          </Link>
+          <Link
+            href="/exercises"
+            className="text-brand-muted hover:text-brand-text transition-colors duration-200 cursor-pointer"
+          >
+            习题
+          </Link>
+          <Link
+            href="/tools"
+            className="text-brand-muted hover:text-brand-text transition-colors duration-200 cursor-pointer"
+          >
+            工具
+          </Link>
+          <Link
+            href="/instruments"
+            className="text-brand-muted hover:text-brand-text transition-colors duration-200 cursor-pointer"
+          >
+            乐器
           </Link>
           <Link
             href="/sandbox"
@@ -44,9 +62,12 @@ export function Navbar() {
                 我的作品
               </Link>
               <span className="text-brand-muted/60">|</span>
-              <span className="text-brand-muted text-xs">
+              <Link
+                href="/profile"
+                className="text-brand-muted hover:text-brand-text text-xs transition-colors duration-200 cursor-pointer"
+              >
                 {session.user.name || session.user.email}
-              </span>
+              </Link>
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
                 className="flex items-center gap-1 text-brand-muted hover:text-red-400 transition-colors duration-200 cursor-pointer"
@@ -67,7 +88,7 @@ export function Navbar() {
               </Link>
               <Link
                 href="/register"
-                className="px-4 py-1.5 rounded-full bg-brand-cta text-white text-xs font-medium hover:bg-brand-cta-hover transition-all duration-200 cursor-pointer"
+                className="px-3 py-1 rounded-full bg-brand-cta text-white hover:bg-brand-cta-hover transition-colors duration-200 cursor-pointer"
               >
                 注册
               </Link>

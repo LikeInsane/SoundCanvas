@@ -89,6 +89,45 @@ function playSnare(ctx: AudioContext, startTime: number) {
   playTone(ctx, 200, startTime, 0.05, "sine", 0.1);
 }
 
+/** Hi-Hat：短促高频噪声 */
+function playHiHat(ctx: AudioContext, startTime: number) {
+  const bufSize = Math.floor(ctx.sampleRate * 0.08);
+  const buffer = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) {
+    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufSize, 3);
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.15, startTime);
+  g.gain.exponentialRampToValueAtTime(0.001, startTime + 0.06);
+  src.connect(g);
+  g.connect(ctx.destination);
+  src.start(startTime);
+  src.stop(startTime + 0.08);
+}
+
+/** Clap：短促噪声 + 瞬态 */
+function playClap(ctx: AudioContext, startTime: number) {
+  const bufSize = ctx.sampleRate * 0.15;
+  const buffer = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) {
+    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufSize, 2);
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.25, startTime);
+  g.gain.exponentialRampToValueAtTime(0.001, startTime + 0.12);
+  src.connect(g);
+  g.connect(ctx.destination);
+  src.start(startTime);
+  src.stop(startTime + 0.15);
+  playTone(ctx, 400, startTime, 0.02, "sine", 0.08);
+}
+
 /** 将 content 中的 beat/bar 转为秒 */
 function beatToSeconds(content: ProjectContent, barIndex: number, beat: number): number {
   const [beatsPerBar] = content.timeSignature;
@@ -145,6 +184,9 @@ export function useAudioEngine(content: ProjectContent) {
         if (t >= offset - 0.01 && t < offset + totalDuration) {
           const when = ctx.currentTime + (t - offset);
           if (ev.type === "kick") playKick(ctx, when);
+          else if (ev.type === "snare") playSnare(ctx, when);
+          else if (ev.type === "hihat") playHiHat(ctx, when);
+          else if (ev.type === "clap") playClap(ctx, when);
           else playSnare(ctx, when);
         }
       });

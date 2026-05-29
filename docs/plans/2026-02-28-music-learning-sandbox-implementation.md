@@ -17,6 +17,7 @@
 ### Task 1: 初始化 Next.js 与基础依赖
 
 **Files:**
+
 - Create: 项目根目录通过 `npx create-next-app@latest` 生成
 - Modify: `package.json`（确认 TypeScript、ESLint、Tailwind 等）
 
@@ -50,6 +51,7 @@ git commit -m "chore: init Next.js with TypeScript, Tailwind, Prisma, NextAuth"
 ### Task 2: Prisma 模型 User 与 Project
 
 **Files:**
+
 - Create/Modify: `prisma/schema.prisma`
 
 **Step 1:** 在 `prisma/schema.prisma` 中定义 datasource（sqlite 或 postgres）、generator，以及：
@@ -94,6 +96,7 @@ git commit -m "feat: add User and Project models with Prisma"
 ### Task 3: NextAuth 配置与 Credentials 注册/登录
 
 **Files:**
+
 - Create: `src/lib/auth.ts`（NextAuth options、Credentials provider）
 - Create: `src/app/api/auth/[...nextauth]/route.ts`
 - Create: `src/app/api/auth/register/route.ts`（注册 API：校验邮箱密码、bcrypt 哈希、创建 User）
@@ -122,6 +125,7 @@ git commit -m "feat: add NextAuth Credentials and register API"
 ### Task 4: 登录页与注册页
 
 **Files:**
+
 - Create: `src/app/(auth)/login/page.tsx`
 - Create: `src/app/(auth)/register/page.tsx`
 - Create: `src/components/ui/` 下简单表单组件（可选，或直接在 page 内写）
@@ -148,6 +152,7 @@ git commit -m "feat: add login and register pages"
 ### Task 5: 首页与导航
 
 **Files:**
+
 - Modify: `src/app/page.tsx`
 - Create/Modify: `src/app/layout.tsx`（导航栏：首页、学习、编曲、我的作品、登录/登出）
 
@@ -167,6 +172,7 @@ git commit -m "feat: add home page and nav with auth state"
 ### Task 6: 学习页（节奏、和弦、旋律）静态内容
 
 **Files:**
+
 - Create: `src/app/learn/rhythm/page.tsx`
 - Create: `src/app/learn/chords/page.tsx`
 - Create: `src/app/learn/melody/page.tsx`
@@ -192,6 +198,7 @@ git commit -m "feat: add learn pages for rhythm, chords, melody"
 ### Task 7: 作品 API（CRUD + 鉴权）
 
 **Files:**
+
 - Create: `src/app/api/projects/route.ts`（GET 列表、POST 新建）
 - Create: `src/app/api/projects/[id]/route.ts`（GET 单条、PUT 更新、DELETE 删除）
 
@@ -219,6 +226,7 @@ git commit -m "feat: add projects API with auth"
 ### Task 8: 我的作品列表页
 
 **Files:**
+
 - Create: `src/app/projects/page.tsx`
 
 **Step 1:** 服务端或客户端取 session；未登录重定向到 `/login`。
@@ -241,6 +249,7 @@ git commit -m "feat: add projects list page"
 ### Task 9: 沙盒页面骨架与状态
 
 **Files:**
+
 - Create: `src/app/sandbox/page.tsx`
 - Create: `src/lib/sandbox-types.ts`（TypeScript 类型：ProjectContent、RhythmEvent、ChordEvent、MelodyEvent 等，与设计文档 4.3 一致）
 
@@ -262,6 +271,7 @@ git commit -m "feat: sandbox page skeleton and content state"
 ### Task 10: 节奏轨 UI 与交互
 
 **Files:**
+
 - Create: `src/components/sandbox/RhythmTrack.tsx`
 - Modify: `src/app/sandbox/page.tsx`（引入 RhythmTrack，传入 content.rhythm 与更新回调）
 
@@ -281,6 +291,7 @@ git commit -m "feat: rhythm track UI and state"
 ### Task 11: 和弦轨 UI 与交互
 
 **Files:**
+
 - Create: `src/components/sandbox/ChordsTrack.tsx`
 - Modify: `src/app/sandbox/page.tsx`
 
@@ -300,6 +311,7 @@ git commit -m "feat: chords track UI and state"
 ### Task 12: 旋律轨 UI 与交互
 
 **Files:**
+
 - Create: `src/components/sandbox/MelodyTrack.tsx`
 - Modify: `src/app/sandbox/page.tsx`
 
@@ -319,6 +331,7 @@ git commit -m "feat: melody track UI and state"
 ### Task 13: Web Audio 播放引擎
 
 **Files:**
+
 - Create: `src/lib/audio-engine.ts`（或 `playback.ts`）
 
 **Step 1:** 实现「根据 content + 当前播放时间」在对应 beat 触发：节奏（kick/snare 采样或合成）、和弦（按 chord 名生成音高并播放）、旋律（按 note + duration 播放）。使用 AudioContext、OscillatorNode、GainNode 或 AudioBufferSourceNode；BPM 换算为秒。
@@ -341,6 +354,7 @@ git commit -m "feat: Web Audio playback for rhythm, chords, melody"
 ### Task 14: 沙盒保存与加载
 
 **Files:**
+
 - Modify: `src/app/sandbox/page.tsx`
 
 **Step 1:** 保存：校验 content（合法 JSON、bars 等范围）；若有 projectId 则 PUT /api/projects/[id]，否则 POST /api/projects；成功后更新 projectId 或跳转/提示。
@@ -363,6 +377,7 @@ git commit -m "feat: sandbox save and load from API"
 ### Task 15: 鉴权与路由保护
 
 **Files:**
+
 - Create: `src/middleware.ts`（可选）或在各页/布局中校验
 - Modify: `src/app/sandbox/page.tsx`, `src/app/projects/page.tsx`
 
@@ -382,6 +397,7 @@ git commit -m "feat: protect sandbox and projects routes"
 ### Task 16: API 错误处理与 content 校验
 
 **Files:**
+
 - Modify: `src/app/api/projects/route.ts`
 - Modify: `src/app/api/projects/[id]/route.ts`
 
@@ -401,6 +417,7 @@ git commit -m "feat: API validation and error messages"
 ### Task 17: 基础样式与可用性
 
 **Files:**
+
 - 各页与组件：确保 Tailwind 或现有样式使导航、表单、沙盒轨道清晰可点；移动端可简单适配（可选）。
 
 **Step 1:** 检查首页、登录/注册、学习页、作品列表、沙盒各轨可读可操作；按钮与链接有明确反馈。
@@ -416,12 +433,12 @@ git commit -m "style: basic styling and usability pass"
 
 ## 完成检查清单
 
-- [ ] 用户可注册、登录、登出
-- [ ] 未登录无法进入沙盒与我的作品；访问会跳转登录
-- [ ] 首页、学习页（节奏/和弦/旋律）可访问
-- [ ] 沙盒可编辑节奏、和弦、旋律三轨，并播放
-- [ ] 可保存作品到云端、在「我的作品」中打开与删除
-- [ ] 作品 API 仅允许操作本人数据；content 不合规时返回 400
+- 用户可注册、登录、登出
+- 未登录无法进入沙盒与我的作品；访问会跳转登录
+- 首页、学习页（节奏/和弦/旋律）可访问
+- 沙盒可编辑节奏、和弦、旋律三轨，并播放
+- 可保存作品到云端、在「我的作品」中打开与删除
+- 作品 API 仅允许操作本人数据；content 不合规时返回 400
 
 ---
 

@@ -31,7 +31,13 @@ export default function ChordsLearnPage() {
         </p>
       </div>
 
-      <div className="mt-8 flex gap-6">
+      <div className="mt-8 flex flex-wrap items-center gap-4">
+        <Link
+          href="/sandbox?preset=chords-1645"
+          className="text-sm font-medium text-brand-cta hover:text-brand-cta-hover transition-colors cursor-pointer"
+        >
+          在沙盒中练习
+        </Link>
         <Link
           href="/learn/rhythm"
           className="text-sm font-medium text-brand-muted hover:text-brand-text transition-colors cursor-pointer"

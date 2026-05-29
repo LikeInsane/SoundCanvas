@@ -29,7 +29,13 @@ export default function RhythmLearnPage() {
         </p>
       </div>
 
-      <div className="mt-8">
+      <div className="mt-8 flex flex-wrap items-center gap-4">
+        <Link
+          href="/sandbox?preset=rhythm-basic"
+          className="text-sm font-medium text-brand-cta hover:text-brand-cta-hover transition-colors cursor-pointer"
+        >
+          在沙盒中练习
+        </Link>
         <Link
           href="/learn/chords"
           className="text-sm font-medium text-brand-cta hover:text-brand-cta-hover transition-colors cursor-pointer"

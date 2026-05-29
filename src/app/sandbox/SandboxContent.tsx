@@ -3,11 +3,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import type { ProjectContent } from "@/lib/sandbox-types";
-import { DEFAULT_CONTENT } from "@/lib/sandbox-types";
+import { DEFAULT_CONTENT, BAR_OPTIONS } from "@/lib/sandbox-types";
+import { getPresetContent } from "@/lib/sandbox-presets";
 import { RhythmTrack } from "@/components/sandbox/RhythmTrack";
 import { ChordsTrack } from "@/components/sandbox/ChordsTrack";
 import { MelodyTrack } from "@/components/sandbox/MelodyTrack";
 import { useAudioEngine } from "@/lib/audio-engine";
+import { useSandboxHistory } from "@/lib/sandbox-history";
 
 /**
  * 沙盒主体（使用 useSearchParams，需在 Suspense 内）
@@ -15,10 +17,20 @@ import { useAudioEngine } from "@/lib/audio-engine";
 export function SandboxContent() {
   const searchParams = useSearchParams();
   const projectIdFromQuery = searchParams.get("id");
+  const presetFromQuery = searchParams.get("preset");
+
+  const {
+    content,
+    setContentDirect,
+    updateContent,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+  } = useSandboxHistory(DEFAULT_CONTENT);
 
   const [projectId, setProjectId] = useState<string | null>(null);
   const [title, setTitle] = useState("未命名作品");
-  const [content, setContent] = useState<ProjectContent>(() => ({ ...DEFAULT_CONTENT }));
   const [loading, setLoading] = useState(!!projectIdFromQuery);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -26,47 +38,85 @@ export function SandboxContent() {
 
   const { isPlaying, currentTime, start, stop, pause } = useAudioEngine(content);
 
+  // 加载作品（id 优先）或应用预设（无 id 时有 preset 则用预设）
   useEffect(() => {
-    if (!projectIdFromQuery) {
-      setLoading(false);
-      setProjectId(null);
-      setTitle("未命名作品");
-      setContent({ ...DEFAULT_CONTENT });
-      return;
+    if (projectIdFromQuery) {
+      let cancelled = false;
+      setLoading(true);
+      setLoadError(null);
+      fetch(`/api/projects/${projectIdFromQuery}`)
+        .then((res) => {
+          if (!res.ok) return res.json().then((d: { error?: string }) => Promise.reject(d));
+          return res.json();
+        })
+        .then((data: { id: string; title: string; content: string }) => {
+          if (cancelled) return;
+          setProjectId(data.id);
+          setTitle(data.title);
+          try {
+            const parsed = JSON.parse(data.content) as ProjectContent;
+            setContentDirect(parsed);
+          } catch {
+            setContentDirect({ ...DEFAULT_CONTENT });
+          }
+        })
+        .catch((err: { error?: string }) => {
+          if (!cancelled) setLoadError(err?.error || "加载失败");
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+      return () => {
+        cancelled = true;
+      };
     }
-    let cancelled = false;
-    setLoading(true);
-    setLoadError(null);
-    fetch(`/api/projects/${projectIdFromQuery}`)
-      .then((res) => {
-        if (!res.ok) return res.json().then((d: { error?: string }) => Promise.reject(d));
-        return res.json();
-      })
-      .then((data: { id: string; title: string; content: string }) => {
-        if (cancelled) return;
-        setProjectId(data.id);
-        setTitle(data.title);
-        try {
-          const parsed = JSON.parse(data.content) as ProjectContent;
-          setContent(parsed);
-        } catch {
-          setContent({ ...DEFAULT_CONTENT });
-        }
-      })
-      .catch((err: { error?: string }) => {
-        if (!cancelled) setLoadError(err?.error || "加载失败");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [projectIdFromQuery]);
 
-  const updateContent = useCallback((updater: (prev: ProjectContent) => ProjectContent) => {
-    setContent(updater);
-  }, []);
+    setLoading(false);
+    setProjectId(null);
+    setTitle("未命名作品");
+    if (presetFromQuery) {
+      const presetContent = getPresetContent(presetFromQuery);
+      setContentDirect(presetContent ?? { ...DEFAULT_CONTENT });
+    } else {
+      setContentDirect({ ...DEFAULT_CONTENT });
+    }
+  }, [projectIdFromQuery, setContentDirect, presetFromQuery]);
+
+  // 撤销/重做快捷键
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === "z") {
+          e.preventDefault();
+          if (e.shiftKey) redo();
+          else undo();
+        }
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [undo, redo]);
+
+  /** 变更小节数时裁切 chords/melody/rhythm 至新范围 */
+  const setBars = useCallback(
+    (newBars: number) => {
+      if (newBars === content.bars) return;
+      updateContent((prev) => {
+        const [beatsPerBar] = prev.timeSignature;
+        const newTotalBeats = newBars * beatsPerBar;
+        return {
+          ...prev,
+          bars: newBars,
+          chords: prev.chords.filter((c) => c.barIndex < newBars),
+          melody: prev.melody.filter((m) => m.barIndex < newBars),
+          rhythm: {
+            pattern: prev.rhythm.pattern.filter((e) => e.beat < newTotalBeats),
+          },
+        };
+      });
+    },
+    [content.bars, updateContent]
+  );
 
   const handleSave = async () => {
     setSaveStatus("saving");
@@ -173,6 +223,20 @@ export function SandboxContent() {
             placeholder="作品标题"
           />
           <label className="flex items-center gap-2 text-sm text-brand-muted">
+            小节
+            <select
+              value={content.bars}
+              onChange={(e) => setBars(Number(e.target.value))}
+              className="input-field w-16 text-center"
+            >
+              {BAR_OPTIONS.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-sm text-brand-muted">
             BPM
             <input
               type="number"
@@ -181,11 +245,32 @@ export function SandboxContent() {
               value={content.bpm}
               onChange={(e) => {
                 const v = parseInt(e.target.value, 10);
-                if (!Number.isNaN(v)) setContent((c) => ({ ...c, bpm: Math.max(40, Math.min(240, v)) }));
+                if (!Number.isNaN(v))
+                  updateContent((c) => ({ ...c, bpm: Math.max(40, Math.min(240, v)) }));
               }}
               className="input-field w-16 text-center"
             />
           </label>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={undo}
+              disabled={!canUndo}
+              className="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              title="撤销 (Ctrl+Z)"
+            >
+              撤销
+            </button>
+            <button
+              type="button"
+              onClick={redo}
+              disabled={!canRedo}
+              className="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              title="重做 (Ctrl+Shift+Z)"
+            >
+              重做
+            </button>
+          </div>
           <div className="flex items-center gap-2">
             {!isPlaying ? (
               <button type="button" onClick={() => start()} className="btn-primary text-sm">

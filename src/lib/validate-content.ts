@@ -34,10 +34,11 @@ export function validateProjectContent(parsed: unknown): string | null {
   }
   const pattern = parsed.rhythm.pattern;
   const totalBeats = parsed.bars * (parsed.timeSignature[0] as number);
+  const validTypes = ["kick", "snare", "hihat", "clap"];
   for (let i = 0; i < pattern.length; i++) {
     const p = pattern[i];
-    if (!isObject(p) || typeof p.beat !== "number" || (p.type !== "kick" && p.type !== "snare")) {
-      return "rhythm.pattern 每项须含 beat(数字) 与 type(kick/snare)";
+    if (!isObject(p) || typeof p.beat !== "number" || !validTypes.includes(p.type as string)) {
+      return "rhythm.pattern 每项须含 beat(数字) 与 type(kick/snare/hihat/clap)";
     }
     if (p.beat < 0 || p.beat >= totalBeats) {
       return "rhythm.pattern 的 beat 超出小节范围";
