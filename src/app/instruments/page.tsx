@@ -1,5 +1,17 @@
 import Link from "next/link";
-import { Piano, Guitar, ArrowRight } from "lucide-react";
+import {
+  Piano,
+  Guitar,
+  AudioWaveform,
+  Music2,
+  Music3,
+  Music4,
+  Drum,
+  Grid3x3,
+  Bell,
+  Waves,
+  ArrowRight,
+} from "lucide-react";
 
 /**
  * 乐器中心：列出可在线弹奏的虚拟乐器。
@@ -12,10 +24,58 @@ const instruments = [
     href: "/piano",
   },
   {
+    icon: AudioWaveform,
+    title: "虚拟合成器",
+    desc: "可切换波形的减法合成器，弹奏并标记、分享与录音。",
+    href: "/synth",
+  },
+  {
     icon: Guitar,
     title: "虚拟吉他",
     desc: "六弦指板弹奏，音位提示、标记分享与原声/电声切换。",
     href: "/guitar",
+  },
+  {
+    icon: Music2,
+    title: "虚拟贝斯",
+    desc: "四弦贝斯指板，温暖低频音色，音位提示与录音回放。",
+    href: "/bass",
+  },
+  {
+    icon: Music3,
+    title: "虚拟尤克里里",
+    desc: "四弦指板与常用和弦库，明亮拨弦音色。",
+    href: "/ukulele",
+  },
+  {
+    icon: Music4,
+    title: "虚拟小提琴",
+    desc: "弓弦音色，可视化音符并标记、分享与录音回放。",
+    href: "/violin",
+  },
+  {
+    icon: Drum,
+    title: "虚拟架子鼓",
+    desc: "打击垫 + 电脑键盘敲击，练习底鼓军镲配合。",
+    href: "/drum-kit",
+  },
+  {
+    icon: Grid3x3,
+    title: "鼓机",
+    desc: "16 步进音序器，编排鼓点并循环播放。",
+    href: "/drum-machine",
+  },
+  {
+    icon: Bell,
+    title: "虚拟钟琴",
+    desc: "明亮金属铃声，适合演奏清脆旋律。",
+    href: "/glockenspiel",
+  },
+  {
+    icon: Waves,
+    title: "虚拟木琴",
+    desc: "木质短促音色，颗粒清晰。",
+    href: "/xylophone",
   },
 ];
 

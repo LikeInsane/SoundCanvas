@@ -13,6 +13,16 @@ let pianoLoaded = false;
 let started = false;
 let initPromise: Promise<void> | null = null;
 
+/** 扩展乐器类型（音色均由 Tone.js 合成，惰性创建，无需下载额外采样） */
+export type ExtInstrument = "synth" | "violin" | "glockenspiel" | "xylophone" | "bass";
+/** 合成器可切换的波形 */
+export type SynthWave = "sine" | "square" | "sawtooth" | "triangle";
+
+/** 复音合成乐器缓存（按需创建，避免一次性创建过多音频节点） */
+const polyCache: Partial<Record<ExtInstrument, ToneNS.PolySynth>> = {};
+/** 尤克里里：独立的拨弦合成器（更亮、衰减更快） */
+let ukulele: ToneNS.PluckSynth | null = null;
+
 /** 惰性加载 Tone 与乐器实例 */
 function load(): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
@@ -121,4 +131,104 @@ export function samplerStrum(midis: number[], bright = false, interval = 0.04) {
   midis.forEach((m, i) => {
     guitar!.triggerAttackRelease(midiToFreq(m), 1.4, t0 + i * interval);
   });
+}
+
+/* ----------------------------- 扩展合成乐器 ----------------------------- */
+
+/** 按需创建某种扩展乐器的复音合成器 */
+function createPoly(kind: ExtInstrument): ToneNS.PolySynth | null {
+  if (!Tone) return null;
+  switch (kind) {
+    case "synth":
+      // 经典减法合成器音色，波形可后续切换
+      return new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: "sawtooth" },
+        envelope: { attack: 0.02, decay: 0.2, sustain: 0.35, release: 0.8 },
+      }).toDestination();
+    case "violin":
+      // 弓弦：慢起音、长延音的 FM 音色
+      return new Tone.PolySynth(Tone.FMSynth, {
+        harmonicity: 1.5,
+        modulationIndex: 4,
+        oscillator: { type: "sine" },
+        envelope: { attack: 0.18, decay: 0.2, sustain: 0.85, release: 0.5 },
+        modulation: { type: "sine" },
+        modulationEnvelope: { attack: 0.3, decay: 0.1, sustain: 0.6, release: 0.4 },
+      }).toDestination();
+    case "glockenspiel":
+      // 钟琴：明亮金属铃声，起音极快、长衰减、无延音
+      return new Tone.PolySynth(Tone.FMSynth, {
+        harmonicity: 3.01,
+        modulationIndex: 12,
+        oscillator: { type: "sine" },
+        envelope: { attack: 0.001, decay: 1.4, sustain: 0, release: 1.4 },
+        modulation: { type: "sine" },
+        modulationEnvelope: { attack: 0.001, decay: 0.4, sustain: 0, release: 0.4 },
+      }).toDestination();
+    case "xylophone":
+      // 木琴：木质、短促清脆
+      return new Tone.PolySynth(Tone.FMSynth, {
+        harmonicity: 2.0,
+        modulationIndex: 6,
+        oscillator: { type: "triangle" },
+        envelope: { attack: 0.001, decay: 0.35, sustain: 0, release: 0.35 },
+        modulation: { type: "square" },
+        modulationEnvelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.2 },
+      }).toDestination();
+    case "bass":
+      // 贝斯：温暖低频，三角波为主
+      return new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: "triangle" },
+        envelope: { attack: 0.01, decay: 0.3, sustain: 0.45, release: 0.6 },
+      }).toDestination();
+    default:
+      return null;
+  }
+}
+
+/** 获取（必要时创建）某扩展乐器 */
+function getPoly(kind: ExtInstrument): ToneNS.PolySynth | null {
+  if (!Tone) return null;
+  if (!polyCache[kind]) {
+    const inst = createPoly(kind);
+    if (inst) polyCache[kind] = inst;
+  }
+  return polyCache[kind] ?? null;
+}
+
+/** 扩展乐器是否可用（Tone 加载完成即可） */
+export function extReady(): boolean {
+  return !!Tone;
+}
+
+/** 切换合成器波形 */
+export function samplerSetSynthWave(wave: SynthWave): void {
+  const s = getPoly("synth");
+  if (!s) return;
+  s.set({ oscillator: { type: wave } });
+}
+
+/** 播放扩展乐器单音；成功返回 true，未就绪返回 false（调用方回退到合成器） */
+export function samplerPlayExtMidi(
+  kind: ExtInstrument,
+  midi: number,
+  duration = 0.9,
+  gain = 0.18
+): boolean {
+  const inst = getPoly(kind);
+  if (!inst || !Tone) return false;
+  void ensureStarted();
+  inst.triggerAttackRelease(midiToNoteName(midi), duration, undefined, gainToVelocity(gain));
+  return true;
+}
+
+/** 尤克里里：明亮拨弦（独立实例） */
+export function samplerPlayUkulele(midi: number): boolean {
+  if (!Tone) return false;
+  if (!ukulele) {
+    ukulele = new Tone.PluckSynth({ dampening: 5200, resonance: 0.95 }).toDestination();
+  }
+  void ensureStarted();
+  ukulele.triggerAttackRelease(midiToFreq(midi), 0.9);
+  return true;
 }

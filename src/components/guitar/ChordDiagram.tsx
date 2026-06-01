@@ -10,10 +10,11 @@ export interface ChordDiagramProps {
   /** 显示的品数 */
   fretRows?: number;
   width?: number;
+  /** 弦数，缺省为 6（吉他）；尤克里里传 4 */
+  stringCount?: number;
 }
 
-export function ChordDiagram({ frets, fretRows = 4, width = 84 }: ChordDiagramProps) {
-  const stringCount = 6;
+export function ChordDiagram({ frets, fretRows = 4, width = 84, stringCount = 6 }: ChordDiagramProps) {
   const padX = 12;
   const padTop = 18;
   const padBottom = 6;

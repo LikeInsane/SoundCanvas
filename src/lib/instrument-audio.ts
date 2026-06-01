@@ -12,6 +12,11 @@ import {
   samplerPlayChordMidi,
   samplerPlaySequenceMidi,
   samplerPlayPluck,
+  samplerPlayExtMidi,
+  samplerPlayUkulele,
+  samplerSetSynthWave,
+  type ExtInstrument,
+  type SynthWave,
 } from "./sampler";
 
 let sharedCtx: AudioContext | null = null;
@@ -152,6 +157,115 @@ export function playPluckMidi(midi: number, bright = false, gain = 0.16) {
   g2.connect(master);
   osc2.start(t);
   osc2.stop(t + 1.6);
+}
+
+/* ----------------------------- 扩展乐器播放 ----------------------------- */
+
+interface VoiceOpts {
+  /** 各泛音：相对基频倍率与音量 */
+  partials: Array<{ ratio: number; level: number; type: OscillatorType }>;
+  attack: number;
+  release: number;
+}
+
+/** 通用合成发声（作为扩展乐器在采样/Tone 未就绪时的回退音色） */
+function scheduleVoice(
+  ctx: AudioContext,
+  freq: number,
+  startTime: number,
+  gain: number,
+  opts: VoiceOpts
+) {
+  const master = ctx.createGain();
+  master.connect(ctx.destination);
+  master.gain.setValueAtTime(0, startTime);
+  master.gain.linearRampToValueAtTime(gain, startTime + opts.attack);
+  master.gain.exponentialRampToValueAtTime(0.0008, startTime + opts.release);
+  opts.partials.forEach((p) => {
+    const osc = ctx.createOscillator();
+    const og = ctx.createGain();
+    osc.type = p.type;
+    osc.frequency.setValueAtTime(freq * p.ratio, startTime);
+    og.gain.setValueAtTime(p.level, startTime);
+    osc.connect(og);
+    og.connect(master);
+    osc.start(startTime);
+    osc.stop(startTime + opts.release + 0.05);
+  });
+}
+
+/** 各扩展乐器的回退音色参数 */
+const FALLBACK_VOICES: Record<ExtInstrument, VoiceOpts> = {
+  synth: {
+    partials: [{ ratio: 1, level: 1, type: "sawtooth" }],
+    attack: 0.02,
+    release: 0.8,
+  },
+  violin: {
+    partials: [
+      { ratio: 1, level: 1, type: "sawtooth" },
+      { ratio: 2, level: 0.3, type: "sine" },
+    ],
+    attack: 0.18,
+    release: 0.6,
+  },
+  glockenspiel: {
+    partials: [
+      { ratio: 1, level: 1, type: "sine" },
+      { ratio: 4, level: 0.5, type: "sine" },
+      { ratio: 9, level: 0.18, type: "sine" },
+    ],
+    attack: 0.001,
+    release: 1.2,
+  },
+  xylophone: {
+    partials: [
+      { ratio: 1, level: 1, type: "triangle" },
+      { ratio: 3, level: 0.4, type: "sine" },
+    ],
+    attack: 0.001,
+    release: 0.4,
+  },
+  bass: {
+    partials: [
+      { ratio: 1, level: 1, type: "triangle" },
+      { ratio: 2, level: 0.2, type: "sine" },
+    ],
+    attack: 0.01,
+    release: 0.5,
+  },
+};
+
+/** 设置合成器波形（透传给采样层） */
+export function setSynthWave(wave: SynthWave) {
+  samplerSetSynthWave(wave);
+}
+
+/** 播放扩展乐器单音：Tone 就绪则用 Tone 合成，否则回退到 Web Audio 合成 */
+export function playExtMidi(kind: ExtInstrument, midi: number, duration = 0.9, gain = 0.18) {
+  if (samplerPlayExtMidi(kind, midi, duration, gain)) return;
+  const ctx = getAudioContext();
+  scheduleVoice(ctx, midiToFreq(midi), ctx.currentTime, gain, FALLBACK_VOICES[kind]);
+}
+
+/** 合成器：可指定波形 */
+export function playSynthMidi(midi: number, wave: SynthWave = "sawtooth", duration = 0.9, gain = 0.18) {
+  setSynthWave(wave);
+  playExtMidi("synth", midi, duration, gain);
+}
+
+/** 尤克里里：明亮拨弦，未就绪时回退到吉他式拨弦 */
+export function playUkuleleMidi(midi: number, gain = 0.16) {
+  if (samplerPlayUkulele(midi)) return;
+  const ctx = getAudioContext();
+  scheduleVoice(ctx, midiToFreq(midi), ctx.currentTime, gain, {
+    partials: [
+      { ratio: 1, level: 1, type: "triangle" },
+      { ratio: 2, level: 0.3, type: "sine" },
+    ],
+    attack: 0.004,
+    release: 0.9,
+  });
 }
 
 /** 节拍器点击声：accent 为重拍（音更高更响） */

@@ -114,6 +114,143 @@ export const THEORY_TOPICS: Topic[] = [
     ],
   },
   {
+    id: "staff",
+    title: "五线谱",
+    desc: "认识五条线与四个间，理解音符在谱表上的高低位置。",
+    lessons: [
+      {
+        id: "lines-and-spaces",
+        title: "线与间",
+        summary: "五线谱由五条线和它们之间的四个间组成。",
+        blocks: [
+          {
+            type: "text",
+            body: "五线谱由五条平行横线构成，从下往上数为第一线到第五线；相邻两线之间的空白叫做“间”，从下往上为第一间到第四间。音符既可以写在线上，也可以写在间里，位置越高音越高。",
+          },
+          {
+            type: "staff",
+            caption: "高音谱号下，音符从低到高依次升高",
+            notes: ["E4", "F4", "G4", "A4", "B4", "C5", "D5", "E5", "F5"],
+          },
+          {
+            type: "tip",
+            body: "高音谱号五条线上的音从下到上是 E、G、B、D、F；四个间从下到上是 F、A、C、E。",
+          },
+        ],
+      },
+      {
+        id: "note-position",
+        title: "音符的位置",
+        summary: "线与间逐级排列，相邻位置相差一个音级。",
+        blocks: [
+          {
+            type: "text",
+            body: "从一条线到相邻的间、再到上一条线，每移动一格音名就向上走一个音级（如 E→F→G）。理解这一规律后，识谱就变成了沿着线与间数音名的过程。",
+          },
+          {
+            type: "play",
+            label: "听这串逐级上行的音",
+            notes: ["E4", "F4", "G4", "A4", "B4", "C5"],
+            mode: "sequence",
+          },
+          { type: "link", href: "/exercises/notes", label: "去做识谱习题" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "clefs",
+    title: "谱号",
+    desc: "谱号确定五线谱上音符的具体音高范围。",
+    lessons: [
+      {
+        id: "treble-bass",
+        title: "高音谱号与低音谱号",
+        summary: "最常用的两个谱号，覆盖人声与乐器的主要音域。",
+        blocks: [
+          {
+            type: "text",
+            body: "高音谱号（G 谱号）的螺旋圈住第二线，把它定为 G4，常用于较高音域；低音谱号（F 谱号）的两点夹住第四线，把它定为 F3，常用于较低音域。钢琴大谱表正是把两者上下叠放。",
+          },
+          {
+            type: "staff",
+            caption: "高音谱号上的中央 C 上方音组",
+            notes: ["C4", "E4", "G4"],
+            clef: "treble",
+          },
+          {
+            type: "staff",
+            caption: "低音谱号上的同名音（更低八度区域）",
+            notes: ["C3", "E3", "G3"],
+            clef: "bass",
+          },
+        ],
+      },
+      {
+        id: "c-clefs",
+        title: "中音与次中音谱号",
+        summary: "C 谱号把中央 C 定在某一条线上。",
+        blocks: [
+          {
+            type: "text",
+            body: "C 谱号标记的那条线即为中央 C（C4）。当它落在第三线时为中音谱号，常用于中提琴；落在第四线时为次中音谱号，用于大提琴、大管的较高音区。使用合适的谱号可以减少附加线，使乐谱更易读。",
+          },
+          {
+            type: "tip",
+            body: "同一个音用不同谱号记写，线间位置会不同，但实际音高不变——谱号只是“坐标系”。",
+          },
+          { type: "link", href: "/exercises/notes", label: "练习不同谱号的识谱" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "accidentals",
+    title: "变音记号",
+    desc: "升、降、还原等记号临时改变音的高低。",
+    lessons: [
+      {
+        id: "sharp-flat",
+        title: "升号与降号",
+        summary: "升号升高半音，降号降低半音。",
+        blocks: [
+          {
+            type: "text",
+            body: "升号（#）把音升高一个半音，降号（b）把音降低一个半音。例如 F 升高半音得到 F#，对应钢琴上 F 右侧的黑键；B 降低半音得到 Bb，对应 B 左侧的黑键。",
+          },
+          {
+            type: "play",
+            label: "听 F 与 F#",
+            notes: ["F4", "F#4"],
+            mode: "sequence",
+          },
+          {
+            type: "play",
+            label: "听 B 与 Bb",
+            notes: ["B4", "Bb4"],
+            mode: "sequence",
+          },
+        ],
+      },
+      {
+        id: "natural-double",
+        title: "还原号与重升重降",
+        summary: "还原号取消变音，重升重降改变两个半音。",
+        blocks: [
+          {
+            type: "text",
+            body: "还原号（♮）取消之前的升降，使音回到本位。重升号（x）把音升高两个半音，重降号（bb）把音降低两个半音，多见于复杂调性中为保持音级拼写的一致。同一个琴键有时可用不同名字记写，这叫等音异名（如 F# 与 Gb）。",
+          },
+          {
+            type: "tip",
+            body: "变音记号在一个小节内持续有效，到下一小节自动失效，除非被调号固定。",
+          },
+          { type: "link", href: "/exercises/notes", label: "练习带变音记号的识谱" },
+        ],
+      },
+    ],
+  },
+  {
     id: "intervals",
     title: "音程",
     desc: "两个音之间的距离，是和声与旋律的基本砖块。",
@@ -164,6 +301,58 @@ export const THEORY_TOPICS: Topic[] = [
             caption: "纯四度 C–F 与纯五度 C–G",
             notes: [["C4", "F4"], ["C4", "G4"]],
           },
+        ],
+      },
+    ],
+  },
+  {
+    id: "chords",
+    title: "和弦",
+    desc: "多个音同时发声构成和弦，是和声色彩的基础。",
+    lessons: [
+      {
+        id: "triad",
+        title: "三和弦的构成",
+        summary: "由根音叠加两个三度音组成的三个音。",
+        blocks: [
+          {
+            type: "text",
+            body: "三和弦是最基础的和弦，由根音、三音、五音三个音叠置而成——在根音上方先叠一个三度，再叠一个三度。以 C 为根音的三和弦是 C–E–G。",
+          },
+          {
+            type: "staff",
+            caption: "C 大三和弦：C–E–G 同时发声",
+            notes: [["C4", "E4", "G4"]],
+          },
+          { type: "play", label: "听 C 大三和弦", notes: ["C4", "E4", "G4"], mode: "chord" },
+          { type: "link", href: "/tools/chord-finder", label: "用和弦查找器探索更多" },
+        ],
+      },
+      {
+        id: "major-minor-chord",
+        title: "大三和弦与小三和弦",
+        summary: "三音的高低决定和弦的明暗色彩。",
+        blocks: [
+          {
+            type: "text",
+            body: "大三和弦的结构是“大三度 + 小三度”，听感明亮（如 C–E–G）；小三和弦是“小三度 + 大三度”，听感柔和忧郁（如 C–Eb–G）。二者只差中间那个三音半音的高低，却带来截然不同的情绪。",
+          },
+          { type: "play", label: "听 C 大三和弦", notes: ["C4", "E4", "G4"], mode: "chord" },
+          { type: "play", label: "听 C 小三和弦", notes: ["C4", "Eb4", "G4"], mode: "chord" },
+        ],
+      },
+      {
+        id: "seventh-chord",
+        title: "七和弦",
+        summary: "在三和弦上再叠一个三度，色彩更丰富。",
+        blocks: [
+          {
+            type: "text",
+            body: "在三和弦的五音之上再叠一个三度，就得到包含四个音的七和弦。属七和弦（如 G–B–D–F）带有推动感，常用于推向主和弦；大七和弦（如 C–E–G–B）则柔和、富有色彩，是流行与爵士的常客。",
+          },
+          { type: "play", label: "听 G 属七和弦", notes: ["G3", "B3", "D4", "F4"], mode: "chord" },
+          { type: "play", label: "听 C 大七和弦", notes: ["C4", "E4", "G4", "B4"], mode: "chord" },
+          { type: "link", href: "/exercises/chords", label: "去做和弦听辨习题" },
         ],
       },
     ],

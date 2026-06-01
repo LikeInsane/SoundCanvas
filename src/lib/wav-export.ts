@@ -5,11 +5,21 @@
 
 import { midiToFreq } from "./music-theory";
 
+export type ExportInstrument =
+  | "piano"
+  | "guitar"
+  | "synth"
+  | "violin"
+  | "glockenspiel"
+  | "xylophone"
+  | "bass"
+  | "ukulele";
+
 export interface RecordedEvent {
   midi: number;
   /** 相对录音起点的毫秒数 */
   time: number;
-  instrument: "piano" | "guitar";
+  instrument: ExportInstrument;
 }
 
 /** 离线渲染单个钢琴音 */
@@ -61,6 +71,104 @@ function renderPluck(ctx: OfflineAudioContext, freq: number, startTime: number) 
   g2.connect(master);
   osc2.start(startTime);
   osc2.stop(startTime + 1.4);
+}
+
+/** 离线渲染通用合成音色（用于扩展乐器） */
+function renderVoice(
+  ctx: OfflineAudioContext,
+  freq: number,
+  startTime: number,
+  opts: {
+    partials: Array<{ ratio: number; level: number; type: OscillatorType }>;
+    attack: number;
+    release: number;
+    gain: number;
+  }
+) {
+  const master = ctx.createGain();
+  master.connect(ctx.destination);
+  master.gain.setValueAtTime(0, startTime);
+  master.gain.linearRampToValueAtTime(opts.gain, startTime + opts.attack);
+  master.gain.exponentialRampToValueAtTime(0.0008, startTime + opts.release);
+  opts.partials.forEach((p) => {
+    const osc = ctx.createOscillator();
+    const og = ctx.createGain();
+    osc.type = p.type;
+    osc.frequency.setValueAtTime(freq * p.ratio, startTime);
+    og.gain.setValueAtTime(p.level, startTime);
+    osc.connect(og);
+    og.connect(master);
+    osc.start(startTime);
+    osc.stop(startTime + opts.release + 0.05);
+  });
+}
+
+/** 按乐器类型离线渲染一个音 */
+function renderEvent(ctx: OfflineAudioContext, instrument: ExportInstrument, freq: number, start: number) {
+  switch (instrument) {
+    case "piano":
+      renderPiano(ctx, freq, start);
+      break;
+    case "guitar":
+    case "ukulele":
+      renderPluck(ctx, freq, start);
+      break;
+    case "synth":
+      renderVoice(ctx, freq, start, {
+        partials: [{ ratio: 1, level: 1, type: "sawtooth" }],
+        attack: 0.02,
+        release: 0.8,
+        gain: 0.16,
+      });
+      break;
+    case "violin":
+      renderVoice(ctx, freq, start, {
+        partials: [
+          { ratio: 1, level: 1, type: "sawtooth" },
+          { ratio: 2, level: 0.3, type: "sine" },
+        ],
+        attack: 0.18,
+        release: 0.6,
+        gain: 0.16,
+      });
+      break;
+    case "glockenspiel":
+      renderVoice(ctx, freq, start, {
+        partials: [
+          { ratio: 1, level: 1, type: "sine" },
+          { ratio: 4, level: 0.5, type: "sine" },
+          { ratio: 9, level: 0.18, type: "sine" },
+        ],
+        attack: 0.001,
+        release: 1.2,
+        gain: 0.18,
+      });
+      break;
+    case "xylophone":
+      renderVoice(ctx, freq, start, {
+        partials: [
+          { ratio: 1, level: 1, type: "triangle" },
+          { ratio: 3, level: 0.4, type: "sine" },
+        ],
+        attack: 0.001,
+        release: 0.4,
+        gain: 0.18,
+      });
+      break;
+    case "bass":
+      renderVoice(ctx, freq, start, {
+        partials: [
+          { ratio: 1, level: 1, type: "triangle" },
+          { ratio: 2, level: 0.2, type: "sine" },
+        ],
+        attack: 0.01,
+        release: 0.5,
+        gain: 0.2,
+      });
+      break;
+    default:
+      renderPiano(ctx, freq, start);
+  }
 }
 
 /** 把 AudioBuffer 编码为 16-bit PCM 立体声 WAV */
@@ -136,8 +244,7 @@ export async function exportRecordingToWav(events: RecordedEvent[], filename = "
   events.forEach((ev) => {
     const freq = midiToFreq(ev.midi);
     const start = ev.time / 1000;
-    if (ev.instrument === "guitar") renderPluck(ctx, freq, start);
-    else renderPiano(ctx, freq, start);
+    renderEvent(ctx, ev.instrument, freq, start);
   });
 
   const rendered = await ctx.startRendering();

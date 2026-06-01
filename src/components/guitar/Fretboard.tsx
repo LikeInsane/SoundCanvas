@@ -5,7 +5,8 @@
  * 仅负责渲染与点击，发声与键盘监听由父组件控制。
  */
 
-import { FRET_COUNT, OPEN_STRING_MIDI, fretToNote } from "@/lib/guitar";
+import { FRET_COUNT, OPEN_STRING_MIDI } from "@/lib/guitar";
+import { midiToNote } from "@/lib/music-theory";
 
 export interface FretboardProps {
   /** 当前按下高亮的 "string-fret" 键集合 */
@@ -15,6 +16,10 @@ export interface FretboardProps {
   /** 提示高亮的 "string-fret" 键集合 */
   hintKeys?: Set<string>;
   showNoteNames?: boolean;
+  /** 各弦空弦 MIDI（从第 1 弦到最低弦）；缺省为标准六弦吉他 */
+  openStringMidi?: number[];
+  /** 品格数（含 0 品）；缺省为吉他的 FRET_COUNT */
+  fretCount?: number;
   onPress?: (stringIndex: number, fret: number) => void;
 }
 
@@ -26,16 +31,20 @@ export function Fretboard({
   markedKeys,
   hintKeys,
   showNoteNames = false,
+  openStringMidi = OPEN_STRING_MIDI,
+  fretCount = FRET_COUNT,
   onPress,
 }: FretboardProps) {
-  const strings = OPEN_STRING_MIDI.length;
+  const strings = openStringMidi.length;
+  /** 按当前调弦计算某弦某品的音名 */
+  const noteOf = (s: number, f: number) => midiToNote(openStringMidi[s] + f);
 
   return (
     <div className="w-full overflow-x-auto">
       <div className="min-w-[680px]">
         {/* 品位标记点行 */}
         <div className="flex pl-10">
-          {Array.from({ length: FRET_COUNT + 1 }).map((_, f) => (
+          {Array.from({ length: fretCount + 1 }).map((_, f) => (
             <div key={f} className="flex-1 text-center text-[10px] text-brand-muted h-4">
               {DOT_FRETS.includes(f) ? "●" : f === 0 ? "" : ""}
             </div>
@@ -46,7 +55,7 @@ export function Fretboard({
           <div key={s} className="flex items-center">
             {/* 弦号 */}
             <div className="w-10 text-center text-[10px] text-brand-muted shrink-0">
-              {fretToNote(s, 0).replace(/\d/, "")}
+              {noteOf(s, 0).replace(/\d/, "")}
             </div>
             <div className="flex flex-1 relative">
               {/* 弦线 */}
@@ -54,7 +63,7 @@ export function Fretboard({
                 className="absolute left-0 right-0 top-1/2 -translate-y-1/2 bg-brand-muted/40"
                 style={{ height: 1 + (strings - 1 - s) * 0.4 }}
               />
-              {Array.from({ length: FRET_COUNT + 1 }).map((_, f) => {
+              {Array.from({ length: fretCount + 1 }).map((_, f) => {
                 const key = `${s}-${f}`;
                 const active = activeKeys?.has(key);
                 const marked = markedKeys?.has(key);
@@ -66,7 +75,7 @@ export function Fretboard({
                     className={`flex-1 h-9 relative flex items-center justify-center group cursor-pointer ${
                       f === 0 ? "border-r-2 border-brand-muted/60" : "border-r border-brand-border"
                     }`}
-                    aria-label={fretToNote(s, f)}
+                    aria-label={noteOf(s, f)}
                   >
                     <span
                       className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-medium transition-colors ${
@@ -80,7 +89,7 @@ export function Fretboard({
                       }`}
                     >
                       {active || marked || hint || showNoteNames
-                        ? fretToNote(s, f).replace(/\d/, "")
+                        ? noteOf(s, f).replace(/\d/, "")
                         : "·"}
                     </span>
                   </button>
